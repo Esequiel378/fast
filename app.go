@@ -1,6 +1,8 @@
 package fast
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -29,7 +31,10 @@ func New() (App, error) {
 	return instance, nil
 }
 
+// Run starts the app
 func (a App) Run(addr string) error {
+	data, _ := json.MarshalIndent(a.server.Stack(), "", "  ")
+	fmt.Print(string(data))
 	return a.server.Listen(addr)
 }
 
@@ -38,8 +43,31 @@ var handlerReturnType = reflect.TypeOf((*Handler)(nil)).Elem()
 // MustRegister registers a handler to the app
 // The handler must be a struct with methods that return a Handler
 func (a App) MustRegister(prefix string, handler any) {
-	router := a.server.Group(prefix)
+	mustValidateAndRegisterHandler(handler, a.server.Group(prefix), a.validator)
+}
 
+// Group is a group of routes
+type Group struct {
+	router    fiber.Router
+	validator validator.Validator
+}
+
+// MustRegister registers a handler to the app
+// The handler must be a struct with methods that return a Handler
+func (g Group) MustRegister(prefix string, handler any) Group {
+	mustValidateAndRegisterHandler(handler, g.router.Group(prefix), g.validator)
+	return g
+}
+
+// Group creates a new group of routes
+func (a App) Group(prefix string) Group {
+	return Group{
+		router:    a.server.Group(prefix),
+		validator: a.validator,
+	}
+}
+
+func mustValidateAndRegisterHandler(handler any, router fiber.Router, validator validator.Validator) {
 	handlerType := reflect.TypeOf(handler)
 	if handlerType.Kind() != reflect.Struct {
 		panic("handler is not a struct")
@@ -62,6 +90,6 @@ func (a App) MustRegister(prefix string, handler any) {
 			panic("methods starting with `Handle` must return fast.Handler")
 		}
 
-		handler.Register(router, a.validator)
+		handler.Register(router, validator)
 	}
 }

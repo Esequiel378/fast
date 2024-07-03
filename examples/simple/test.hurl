@@ -1,1 +1,1 @@
-GET http://localhost:3000?limit=10
+GET http://localhost:3000/admin/users?limit=10
