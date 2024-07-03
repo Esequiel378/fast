@@ -37,7 +37,9 @@ var handlerReturnType = reflect.TypeOf((*Handler)(nil)).Elem()
 
 // MustRegister registers a handler to the app
 // The handler must be a struct with methods that return a Handler
-func (a App) MustRegister(handler any) {
+func (a App) MustRegister(prefix string, handler any) {
+	router := a.server.Group(prefix)
+
 	handlerType := reflect.TypeOf(handler)
 	if handlerType.Kind() != reflect.Struct {
 		panic("handler is not a struct")
@@ -60,6 +62,6 @@ func (a App) MustRegister(handler any) {
 			panic("methods starting with `Handle` must return fast.Handler")
 		}
 
-		handler.Register(a.server, a.validator)
+		handler.Register(router, a.validator)
 	}
 }
