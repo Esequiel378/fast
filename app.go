@@ -35,12 +35,12 @@ func (a App) Run(addr string) error {
 
 var handlerReturnType = reflect.TypeOf((*Handler)(nil)).Elem()
 
-// Register registers a handler to the app
+// MustRegister registers a handler to the app
 // The handler must be a struct with methods that return a Handler
-func (a App) Register(handler any) {
+func (a App) MustRegister(handler any) {
 	handlerType := reflect.TypeOf(handler)
 	if handlerType.Kind() != reflect.Struct {
-		panic("handler must be a struct")
+		panic("handler is not a struct")
 	}
 
 	handlerValue := reflect.ValueOf(handler)
@@ -55,7 +55,11 @@ func (a App) Register(handler any) {
 			continue
 		}
 
-		handler := method.Func.Call([]reflect.Value{handlerValue})[0].Interface().(Handler)
+		handler, ok := method.Func.Call([]reflect.Value{handlerValue})[0].Interface().(Handler)
+		if !ok {
+			panic("methods starting with `Handle` must return fast.Handler")
+		}
+
 		handler.Register(a.server, a.validator)
 	}
 }

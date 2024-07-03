@@ -10,7 +10,7 @@ import (
 func main() {
 	app, _ := fast.New()
 
-	app.Register(UserHandler{})
+	app.MustRegister(UserHandler{})
 
 	log.Fatal(app.Run(":3000"))
 }
