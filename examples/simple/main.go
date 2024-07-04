@@ -36,9 +36,9 @@ func (h UserHandler) HandleList() fast.Handler {
 	}
 
 	return fast.
-		NewEndpoint[In, Out]().
-		Path("/").
+		Endpoint[In, Out]().
 		Method(http.MethodGet).
+		Path("/").
 		Handle(func(c fast.Context, input In) (Out, error) {
 			// Perfom database query
 			output := Out{

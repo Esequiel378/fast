@@ -14,39 +14,39 @@ type Handler interface {
 	Register(router fiber.Router, validator validator.Validator)
 }
 
-// Endpoint is a struct that represents an endpoint
-type Endpoint[In, Out any] struct {
+// endpoint is a struct that represents an endpoint
+type endpoint[In, Out any] struct {
 	path    string
 	method  string
 	handler func(Context, In) (Out, error)
 }
 
-var _ Handler = (*Endpoint[any, any])(nil)
+var _ Handler = (*endpoint[any, any])(nil)
 
-func NewEndpoint[In, Out any]() *Endpoint[In, Out] {
-	return &Endpoint[In, Out]{}
+func Endpoint[In, Out any]() *endpoint[In, Out] {
+	return &endpoint[In, Out]{}
 }
 
 // Path sets the path of the endpoint
-func (e *Endpoint[In, Out]) Path(path string) *Endpoint[In, Out] {
+func (e *endpoint[In, Out]) Path(path string) *endpoint[In, Out] {
 	e.path = path
 	return e
 }
 
 // Method sets the method of the endpoint
-func (e *Endpoint[In, Out]) Method(method string) *Endpoint[In, Out] {
+func (e *endpoint[In, Out]) Method(method string) *endpoint[In, Out] {
 	e.method = method
 	return e
 }
 
 // Handle sets the handler of the endpoint
-func (e *Endpoint[In, Out]) Handle(fn func(Context, In) (Out, error)) Handler {
+func (e *endpoint[In, Out]) Handle(fn func(Context, In) (Out, error)) Handler {
 	e.handler = fn
 	return e
 }
 
 // Register registers the endpoint to the given router
-func (e *Endpoint[In, Out]) Register(r fiber.Router, v validator.Validator) {
+func (e *endpoint[In, Out]) Register(r fiber.Router, v validator.Validator) {
 	r.Add(
 		e.method,
 		e.path,
@@ -69,7 +69,7 @@ func (e *Endpoint[In, Out]) Register(r fiber.Router, v validator.Validator) {
 				})
 			}
 
-			context := Context{inner: c}
+			context := newContext(c)
 
 			output, err := e.handler(context, input)
 			if err != nil {
