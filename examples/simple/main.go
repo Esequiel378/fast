@@ -8,46 +8,24 @@ import (
 )
 
 func main() {
-	app, _ := fast.New()
+	app, err := fast.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	app.MustRegister("/", UserHandler{})
-
-	app.Group("/admin").
-		MustRegister("/users", UserHandler{}).
-		MustRegister("/accounts", UserHandler{})
+	app.MustRegister("/", GreetingHandler{})
 
 	log.Fatal(app.Run(":3000"))
 }
 
-type User struct {
-	Name string
-}
+type GreetingHandler struct{}
 
-type UserHandler struct{}
-
-func (h UserHandler) HandleList() fast.Handler {
-	type In struct {
-		Limit int `json:"limit" validate:"omitempty,gte=10,lte=100"`
-		Page  int `json:"page" validate:"omitempty,gte=0"`
-	}
-
-	type Out struct {
-		Users []User
-	}
-
+func (h GreetingHandler) HandleGet() fast.Handler {
 	return fast.
-		Endpoint[In, Out]().
+		Endpoint[fast.In, fast.Out]().
 		Method(http.MethodGet).
-		Path("/").
-		Handle(func(c fast.Context, input In) (Out, error) {
-			// Perfom database query
-			output := Out{
-				Users: []User{
-					{Name: "Alice"},
-					{Name: "Bob"},
-				},
-			}
-
-			return output, nil
+		Path("/greeting").
+		Handle(func(fast.Context, fast.In) (fast.Out, error) {
+			return "Hello, World!", nil
 		})
 }

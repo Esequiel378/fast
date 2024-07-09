@@ -33,6 +33,7 @@ func New() (App, error) {
 
 // Run starts the app
 func (a App) Run(addr string) error {
+	// TODO: Improve endpoints listing on startup
 	data, _ := json.MarshalIndent(a.server.Stack(), "", "  ")
 	fmt.Print(string(data))
 	return a.server.Listen(addr)

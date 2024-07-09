@@ -3,9 +3,17 @@ package fast
 import (
 	"log/slog"
 	"net/http"
+	"reflect"
 
 	"github.com/esequiel378/fast/internal/validator"
 	"github.com/gofiber/fiber/v2"
+)
+
+type (
+	// In is the default input type for an endpoint
+	In struct{}
+	// Out is the default output type for an endpoint
+	Out string
 )
 
 // Handler is the interface that links the endpoint to the router
@@ -47,6 +55,9 @@ func (e *endpoint[In, Out]) Handle(fn func(Context, In) (Out, error)) Handler {
 
 // Register registers the endpoint to the given router
 func (e *endpoint[In, Out]) Register(r fiber.Router, v validator.Validator) {
+	var out Out
+	shouldValidateOutput := reflect.TypeOf(out).Kind() == reflect.Struct
+
 	r.Add(
 		e.method,
 		e.path,
@@ -77,10 +88,12 @@ func (e *endpoint[In, Out]) Register(r fiber.Router, v validator.Validator) {
 				return c.SendStatus(fiber.StatusInternalServerError)
 			}
 
-			if err := v.ValidateStruct(&output); err != nil {
-				return c.Status(fiber.StatusInternalServerError).JSON(validator.ValidationErrorSerializer{
-					Errors: v.Translate(err),
-				})
+			if shouldValidateOutput {
+				if err := v.ValidateStruct(&output); err != nil {
+					return c.Status(fiber.StatusInternalServerError).JSON(validator.ValidationErrorSerializer{
+						Errors: v.Translate(err),
+					})
+				}
 			}
 
 			return c.Status(fiber.StatusOK).JSON(output)
