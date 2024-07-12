@@ -1,6 +1,7 @@
 package fast
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"reflect"
@@ -24,9 +25,10 @@ type Handler interface {
 
 // endpoint is a struct that represents an endpoint
 type endpoint[In, Out any] struct {
-	path    string
-	method  string
-	handler func(Context, In) (Out, error)
+	path        string
+	method      string
+	handler     func(Context, In) (Out, error)
+	middlewares []func(Context) error
 }
 
 var _ Handler = (*endpoint[any, any])(nil)
@@ -47,6 +49,12 @@ func (e *endpoint[In, Out]) Method(method string) *endpoint[In, Out] {
 	return e
 }
 
+// Middlewares sets the middlewares of the endpoint
+func (e *endpoint[In, Out]) Middlewares(middlewares ...func(Context) error) *endpoint[In, Out] {
+	e.middlewares = middlewares
+	return e
+}
+
 // Handle sets the handler of the endpoint
 func (e *endpoint[In, Out]) Handle(fn func(Context, In) (Out, error)) Handler {
 	e.handler = fn
@@ -55,48 +63,59 @@ func (e *endpoint[In, Out]) Handle(fn func(Context, In) (Out, error)) Handler {
 
 // Register registers the endpoint to the given router
 func (e *endpoint[In, Out]) Register(r fiber.Router, v validator.Validator) {
+	handlers := make([]fiber.Handler, len(e.middlewares))
+
+	for idx, middleware := range e.middlewares {
+		handlers[idx] = func(c *fiber.Ctx) error {
+			err := middleware(newContext(c))
+
+			var httpErr httpError
+			if errors.As(err, &httpErr) {
+				return c.Status(httpErr.status).SendString(httpErr.message)
+			}
+
+			return c.Next()
+		}
+	}
+
 	var out Out
 	shouldValidateOutput := reflect.TypeOf(out).Kind() == reflect.Struct
 
-	r.Add(
-		e.method,
-		e.path,
-		func(c *fiber.Ctx) error {
-			var input In
+	handlers = append(handlers, func(c *fiber.Ctx) error {
+		var input In
 
-			parser := c.QueryParser
+		parser := c.QueryParser
 
-			if e.method == http.MethodPost {
-				parser = c.BodyParser
-			}
+		if e.method == http.MethodPost {
+			parser = c.BodyParser
+		}
 
-			if err := parser(&input); err != nil {
-				return c.SendStatus(fiber.StatusBadRequest)
-			}
+		if err := parser(&input); err != nil {
+			return c.SendStatus(fiber.StatusBadRequest)
+		}
 
-			if err := v.ValidateStruct(&input); err != nil {
-				return c.Status(fiber.StatusBadRequest).JSON(validator.ValidationErrorSerializer{
+		if err := v.ValidateStruct(&input); err != nil {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(validator.ValidationErrorSerializer{
+				Errors: v.Translate(err),
+			})
+		}
+
+		output, err := e.handler(newContext(c), input)
+		if err != nil {
+			slog.Error("error in handler %s %s: %w", e.method, e.path, err)
+			return c.SendStatus(fiber.StatusInternalServerError)
+		}
+
+		if shouldValidateOutput {
+			if err := v.ValidateStruct(&output); err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(validator.ValidationErrorSerializer{
 					Errors: v.Translate(err),
 				})
 			}
+		}
 
-			context := newContext(c)
+		return c.Status(fiber.StatusOK).JSON(output)
+	})
 
-			output, err := e.handler(context, input)
-			if err != nil {
-				slog.Error("error in handler %s %s: %w", e.method, e.path, err)
-				return c.SendStatus(fiber.StatusInternalServerError)
-			}
-
-			if shouldValidateOutput {
-				if err := v.ValidateStruct(&output); err != nil {
-					return c.Status(fiber.StatusInternalServerError).JSON(validator.ValidationErrorSerializer{
-						Errors: v.Translate(err),
-					})
-				}
-			}
-
-			return c.Status(fiber.StatusOK).JSON(output)
-		},
-	)
+	r.Add(e.method, e.path, handlers...)
 }

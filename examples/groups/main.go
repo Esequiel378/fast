@@ -8,7 +8,10 @@ import (
 )
 
 func main() {
-	app, _ := fast.New()
+	app, err := fast.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	app.Group("/admin").
 		MustRegister("/users", UserHandler{}).
