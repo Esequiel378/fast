@@ -1,6 +1,10 @@
 GET http://localhost:3000/greeting
 HTTP 401
 
+GET http://localhost:3000/greeting
+API-Key: fast-is-awesome
+HTTP 422
+
 GET http://localhost:3000/greeting?name=Esequiel
 API-Key: fast-is-awesome
 HTTP 200

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/esequiel378/fast"
 )
@@ -39,7 +40,7 @@ func (h GreetingHandler) HandleGreeting() fast.Handler {
 
 	return fast.
 		Endpoint[In, Out]().
-		Method("GET").
+		Method(http.MethodGet).
 		Path("/greeting").
 		Middlewares(h.apiKeyValidator.HandleValidateAPIKey()).
 		Handle(func(c fast.Context, in In) (Out, error) {
