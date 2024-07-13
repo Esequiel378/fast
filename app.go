@@ -31,8 +31,11 @@ func New() (App, error) {
 	return instance, nil
 }
 
-// Run starts the app
-func (a App) Run(addr string) error {
+// Listen serves HTTP requests from the given addr.
+//
+//	app.Listen(":8080")
+//	app.Listen("127.0.0.1:8080")
+func (a App) Listen(addr string) error {
 	// TODO: Improve endpoints listing on startup
 	data, _ := json.MarshalIndent(a.server.Stack(), "", "  ")
 	fmt.Print(string(data))
@@ -42,7 +45,7 @@ func (a App) Run(addr string) error {
 var handlerReturnType = reflect.TypeOf((*Handler)(nil)).Elem()
 
 // MustRegister registers a handler to the app
-// The handler must be a struct with methods that return a Handler
+// The handler must be a struct with Hanlder methods.
 func (a App) MustRegister(prefix string, handler any) {
 	mustValidateAndRegisterHandler(handler, a.server.Group(prefix), a.validator)
 }
