@@ -7,30 +7,23 @@ Fast is conviniet wrapper for the [Fiber framework](https://gofiber.io/). It pro
 
 ```go
 func main() {
-	app, _ := fast.New()
+  app, _ := fast.New()
 
-	app.MustRegister("/users", UserHandler{})
+  app.MustRegister("/", GreetingHandler{})
 
-	log.Fatal(app.Run(":3000"))
+  log.Fatal(app.Run(":3000"))
 }
 
-type User struct {
-	Name string
-}
+type GreetingHandler struct{}
 
-type UserHandler struct{}
-
-func (h UserHandler) HandleList() fast.Handler {
-    type In struct {}
-    type Out struct {}
-
-	return fast.
-		Endpoint[In, Out]().
-		Method(http.MethodGet).
-		Path("/").
-		Handle(func(c fast.Context, input In) (Out, error) {
-			return Out{}, nil
-		})
+func (h GreetingHandler) HandleGet() fast.Handler {
+  return fast.
+    Endpoint[fast.In, fast.Out]().
+    Method(http.MethodGet).
+    Path("/").
+    Handle(func(*fast.Context, fast.In) (fast.Out, error) {
+      return "Hello, World!", nil
+    })
 }
 ```
 
