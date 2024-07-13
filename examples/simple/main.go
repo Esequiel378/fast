@@ -25,7 +25,7 @@ func (h GreetingHandler) HandleGet() fast.Handler {
 		Endpoint[fast.In, fast.Out]().
 		Method(http.MethodGet).
 		Path("/greeting").
-		Handle(func(fast.Context, fast.In) (fast.Out, error) {
+		Handle(func(*fast.Context, fast.In) (fast.Out, error) {
 			return "Hello, World!", nil
 		})
 }

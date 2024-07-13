@@ -35,7 +35,7 @@ func (h UserHandler) HandleList() fast.Handler {
 		Endpoint[fast.In, Out]().
 		Method(http.MethodGet).
 		Path("/").
-		Handle(func(fast.Context, fast.In) (Out, error) {
+		Handle(func(*fast.Context, fast.In) (Out, error) {
 			output := Out{
 				Users: []User{
 					{Name: "Alice"},
@@ -68,7 +68,7 @@ func (h AccountsHandler) HandleList() fast.Handler {
 		Endpoint[In, Out]().
 		Method(http.MethodGet).
 		Path("/").
-		Handle(func(c fast.Context, input In) (Out, error) {
+		Handle(func(_ *fast.Context, input In) (Out, error) {
 			output := Out{
 				Accounts: []Account{
 					{ID: 1, Name: "Alice"},

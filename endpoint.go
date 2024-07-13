@@ -27,8 +27,8 @@ type Handler interface {
 type endpoint[In, Out any] struct {
 	path        string
 	method      string
-	handler     func(Context, In) (Out, error)
-	middlewares []func(Context) error
+	handler     func(*Context, In) (Out, error)
+	middlewares []func(*Context) error
 }
 
 var _ Handler = (*endpoint[any, any])(nil)
@@ -50,13 +50,13 @@ func (e *endpoint[In, Out]) Method(method string) *endpoint[In, Out] {
 }
 
 // Middlewares sets the middlewares of the endpoint
-func (e *endpoint[In, Out]) Middlewares(middlewares ...func(Context) error) *endpoint[In, Out] {
+func (e *endpoint[In, Out]) Middlewares(middlewares ...func(*Context) error) *endpoint[In, Out] {
 	e.middlewares = middlewares
 	return e
 }
 
 // Handle sets the handler of the endpoint
-func (e *endpoint[In, Out]) Handle(fn func(Context, In) (Out, error)) Handler {
+func (e *endpoint[In, Out]) Handle(fn func(*Context, In) (Out, error)) Handler {
 	e.handler = fn
 	return e
 }

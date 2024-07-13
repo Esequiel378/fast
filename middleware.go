@@ -1,3 +1,3 @@
 package fast
 
-type Middleware = func(ctx Context) error
+type Middleware = func(ctx *Context) error

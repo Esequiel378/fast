@@ -43,7 +43,7 @@ func (h GreetingHandler) HandleGreeting() fast.Handler {
 		Method(http.MethodGet).
 		Path("/greeting").
 		Middlewares(h.apiKeyValidator.HandleValidateAPIKey()).
-		Handle(func(c fast.Context, in In) (Out, error) {
+		Handle(func(_ *fast.Context, in In) (Out, error) {
 			output := Out{
 				Message: fmt.Sprintf("Hello, %s!", in.Name),
 			}
@@ -64,8 +64,8 @@ type AuthMiddleware struct {
 var _ APIKeyValidator = (*AuthMiddleware)(nil)
 
 func (m AuthMiddleware) HandleValidateAPIKey() fast.Middleware {
-	return func(c fast.Context) error {
-		apiKey := c.Headers().Get("API-Key")
+	return func(c *fast.Context) error {
+		apiKey := c.Get("API-Key")
 
 		if apiKey != "fast-is-awesome" {
 			return fast.UnauthorizedError("invalid API key")
