@@ -17,7 +17,7 @@ func main() {
 		MustRegister("/users", UserHandler{}).
 		MustRegister("/accounts", AccountsHandler{})
 
-	log.Fatal(app.Run(":3000"))
+	log.Fatal(app.Listen(":3000"))
 }
 
 type User struct {

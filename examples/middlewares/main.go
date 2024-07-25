@@ -16,7 +16,7 @@ func main() {
 
 	app.MustRegister("/", NewGreetingHandler(AuthMiddleware{}))
 
-	log.Fatal(app.Run(":3000"))
+	log.Fatal(app.Listen(":3000"))
 }
 
 type GreetingHandler struct {

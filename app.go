@@ -15,7 +15,15 @@ type App struct {
 	server    *fiber.App
 }
 
-func New() (App, error) {
+// WithFiberApp sets the fiber app to use.
+// This is useful to pre-configure the fiber app
+func WithFiberApp(app *fiber.App) func(*App) {
+	return func(a *App) {
+		a.server = app
+	}
+}
+
+func New(opts ...func(*App)) (App, error) {
 	v, err := validator.NewValidatorV10()
 	if err != nil {
 		return App{}, err
@@ -26,6 +34,10 @@ func New() (App, error) {
 	instance := App{
 		validator: v,
 		server:    server,
+	}
+
+	for _, opt := range opts {
+		opt(&instance)
 	}
 
 	return instance, nil
