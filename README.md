@@ -19,12 +19,15 @@ type GreetingHandler struct{}
 func (h GreetingHandler) HandleGet() fast.Handler {
   return fast.
     Endpoint[fast.In, fast.Out]().
-    Method(http.MethodGet).
-    Path("/").
     Handle(func(*fast.Context, fast.In) (fast.Out, error) {
       return "Hello, World!", nil
     })
 }
+```
+
+```shell
+$ curl http://localhost:3000
+Hello, World!
 ```
 
 The `In` and `Out` types are used to define the input and output of the endpoint.

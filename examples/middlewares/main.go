@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/esequiel378/fast"
 )
@@ -14,7 +13,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app.MustRegister("/", NewGreetingHandler(AuthMiddleware{}))
+	app.MustRegister("/greeting", NewGreetingHandler(AuthMiddleware{}))
 
 	log.Fatal(app.Listen(":3000"))
 }
@@ -40,8 +39,6 @@ func (h GreetingHandler) HandleGreeting() fast.Handler {
 
 	return fast.
 		Endpoint[In, Out]().
-		Method(http.MethodGet).
-		Path("/greeting").
 		Middlewares(h.apiKeyValidator.HandleValidateAPIKey()).
 		Handle(func(_ *fast.Context, in In) (Out, error) {
 			output := Out{

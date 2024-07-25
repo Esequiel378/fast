@@ -34,7 +34,10 @@ type endpoint[In, Out any] struct {
 var _ Handler = (*endpoint[any, any])(nil)
 
 func Endpoint[In, Out any]() *endpoint[In, Out] {
-	return &endpoint[In, Out]{}
+	return &endpoint[In, Out]{
+		path:   "/",
+		method: http.MethodGet,
+	}
 }
 
 // Path sets the path of the endpoint
