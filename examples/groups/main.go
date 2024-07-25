@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/esequiel378/fast"
 )
@@ -33,8 +32,6 @@ func (h UserHandler) HandleList() fast.Handler {
 
 	return fast.
 		Endpoint[fast.In, Out]().
-		Method(http.MethodGet).
-		Path("/").
 		Handle(func(*fast.Context, fast.In) (Out, error) {
 			output := Out{
 				Users: []User{
@@ -66,8 +63,6 @@ func (h AccountsHandler) HandleList() fast.Handler {
 
 	return fast.
 		Endpoint[In, Out]().
-		Method(http.MethodGet).
-		Path("/").
 		Handle(func(_ *fast.Context, input In) (Out, error) {
 			output := Out{
 				Accounts: []Account{
