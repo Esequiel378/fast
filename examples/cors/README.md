@@ -1,6 +1,6 @@
-# Simple
+# CORCORS
 
-This is a simple example of using [Fast](https://github.com/Esequiel378/fast) with a single endpoint that returns Hello World.
+This is a simple example of using [Fast](https://github.com/Esequiel378/fast) overriding fiber default config to use CORS
 
 ## Running the app
 

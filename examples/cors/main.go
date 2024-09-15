@@ -10,7 +10,13 @@ import (
 
 func main() {
 	a := fiber.New()
-	a.Use(cors.New())
+	a.Use(
+		cors.New(
+			cors.Config{
+				AllowMethods: "GET",
+			},
+		),
+	)
 
 	app, err := fast.New(fast.WithFiberApp(a))
 	if err != nil {
