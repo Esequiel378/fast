@@ -62,19 +62,6 @@ func (a App) MustRegister(prefix string, handler any) {
 	mustValidateAndRegisterHandler(handler, a.server.Group(prefix), a.validator)
 }
 
-// Group is a group of routes
-type Group struct {
-	router    fiber.Router
-	validator validator.Validator
-}
-
-// MustRegister registers a handler to the app
-// The handler must be a struct with methods that return a Handler
-func (g Group) MustRegister(prefix string, handler any) Group {
-	mustValidateAndRegisterHandler(handler, g.router.Group(prefix), g.validator)
-	return g
-}
-
 // Group creates a new group of routes
 func (a App) Group(prefix string) Group {
 	return Group{
@@ -91,7 +78,7 @@ func mustValidateAndRegisterHandler(handler any, router fiber.Router, validator 
 
 	handlerValue := reflect.ValueOf(handler)
 
-	for i := 0; i < handlerType.NumMethod(); i++ {
+	for i := range handlerType.NumMethod() {
 		method := handlerType.Method(i)
 
 		hasCorrectName := strings.HasPrefix(method.Name, "Handle")
