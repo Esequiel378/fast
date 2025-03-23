@@ -16,6 +16,10 @@ func main() {
 		MustRegister("/users", UserHandler{}).
 		MustRegister("/accounts", AccountsHandler{})
 
+	app.Group("/retool").
+		MustRegister("/orders", UserHandler{}).
+		MustRegister("/billing", UserHandler{})
+
 	log.Fatal(app.Listen(":3000"))
 }
 
@@ -63,6 +67,7 @@ func (h AccountsHandler) HandleList() fast.Handler {
 
 	return fast.
 		Endpoint[In, Out]().
+		Path("/:id/test-id").
 		Handle(func(_ *fast.Context, input In) (Out, error) {
 			output := Out{
 				Accounts: []Account{

@@ -15,7 +15,7 @@ type App struct {
 	validator validator.Validator
 	server    *fiber.App
 	path      string
-	registry  map[string]Handler
+	apiSchema *OpenAPIGenerator
 }
 
 // WithFiberApp sets the fiber app to use.
@@ -38,12 +38,32 @@ func New(opts ...func(*App)) (App, error) {
 		validator: v,
 		server:    server,
 		path:      "",
-		registry:  make(map[string]Handler),
+		apiSchema: NewOpenAPIGenerator(OpenAPIInfo{
+			Title:       "Fast API",
+			Description: "Fast API",
+			Version:     "0.0.1",
+		}),
 	}
 
 	for _, opt := range opts {
 		opt(&instance)
 	}
+
+	// Endpoint to serve the OpenAPI JSON
+	instance.server.Get("/swagger.json", func(c *fiber.Ctx) error {
+		schema, err := instance.apiSchema.GenerateJSON()
+		if err != nil {
+			return c.Status(500).SendString(fmt.Sprintf("Error generating OpenAPI schema: %v", err))
+		}
+		c.Set("Content-Type", "application/json")
+		return c.SendString(schema)
+	})
+
+	// Serve Swagger UI
+	instance.server.Get("/swagger", func(c *fiber.Ctx) error {
+		c.Set("Content-Type", "text/html")
+		return c.SendString(swaggerUIHTML)
+	})
 
 	return instance, nil
 }
@@ -69,7 +89,7 @@ func (a App) MustRegister(prefix string, handler any) {
 		handler,
 		a.server.Group(prefix),
 		a.validator,
-		a.registry,
+		a.apiSchema,
 	)
 }
 
@@ -79,7 +99,7 @@ func (a App) Group(prefix string) Group {
 		router:    a.server.Group(prefix),
 		validator: a.validator,
 		path:      path.Join(a.path, prefix),
-		registry:  a.registry,
+		apiSchema: a.apiSchema,
 	}
 }
 
@@ -88,7 +108,7 @@ func mustValidateAndRegisterHandler(
 	handler any,
 	router fiber.Router,
 	validator validator.Validator,
-	registry map[string]Handler,
+	apiSchema *OpenAPIGenerator,
 ) {
 	handlerType := reflect.TypeOf(handler)
 	if handlerType.Kind() != reflect.Struct {
@@ -113,7 +133,7 @@ func mustValidateAndRegisterHandler(
 		}
 
 		handler.Register(router, validator)
-
-		registry[path] = handler
+		fmt.Printf("Registered %s %s\n", handler.Method(), path)
+		apiSchema.RegisterHandler(path, handler)
 	}
 }

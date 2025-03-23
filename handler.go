@@ -20,6 +20,10 @@ type Handler interface {
 	Method() string
 	// Middlewares returns the middleware functions
 	Middlewares() []func(*Context) error
+	// InputSerializer returns the input serializer
+	InputSerializer() any
+	// OutputSerializer returns the output serializer
+	OutputSerializer() any
 }
 
 // endpointHandler implements the Handler interface
@@ -28,6 +32,8 @@ type endpointHandler[I, O any] struct {
 	method      string
 	handler     func(*Context, I) (O, error)
 	middlewares []func(*Context) error
+	input       I
+	output      O
 }
 
 // Path returns the endpoint path
@@ -97,4 +103,12 @@ func (h *endpointHandler[I, O]) Register(r fiber.Router, v validator.Validator) 
 	})
 
 	r.Add(h.method, h.path, handlers...)
+}
+
+func (h *endpointHandler[I, O]) InputSerializer() any {
+	return h.input
+}
+
+func (h *endpointHandler[I, O]) OutputSerializer() any {
+	return h.output
 }

@@ -12,7 +12,7 @@ type Group struct {
 	router    fiber.Router
 	validator validator.Validator
 	path      string
-	registry  map[string]Handler
+	apiSchema *OpenAPIGenerator
 }
 
 // MustRegister registers a handler to the app
@@ -23,7 +23,7 @@ func (g Group) MustRegister(prefix string, handler any) Group {
 		handler,
 		g.router.Group(prefix),
 		g.validator,
-		g.registry,
+		g.apiSchema,
 	)
 	return g
 }

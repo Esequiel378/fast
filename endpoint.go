@@ -46,10 +46,17 @@ func (b *EndpointBuilder[I, O]) Middlewares(middlewares ...func(*Context) error)
 
 // Handle finalizes the builder and returns a Handler that can be registered
 func (b *EndpointBuilder[I, O]) Handle(fn func(*Context, I) (O, error)) Handler {
+	var (
+		input  I
+		output O
+	)
+
 	return &endpointHandler[I, O]{
 		path:        b.path,
 		method:      b.method,
 		handler:     fn,
 		middlewares: b.middlewares,
+		input:       input,
+		output:      output,
 	}
 }
