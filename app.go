@@ -3,6 +3,7 @@ package fast
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"reflect"
 	"strings"
 
@@ -13,6 +14,8 @@ import (
 type App struct {
 	validator validator.Validator
 	server    *fiber.App
+	path      string
+	registry  map[string]Handler
 }
 
 // WithFiberApp sets the fiber app to use.
@@ -34,6 +37,8 @@ func New(opts ...func(*App)) (App, error) {
 	instance := App{
 		validator: v,
 		server:    server,
+		path:      "",
+		registry:  make(map[string]Handler),
 	}
 
 	for _, opt := range opts {
@@ -59,7 +64,13 @@ var handlerReturnType = reflect.TypeOf((*Handler)(nil)).Elem()
 // MustRegister registers a handler to the app
 // The handler must be a struct with Hanlder methods.
 func (a App) MustRegister(prefix string, handler any) {
-	mustValidateAndRegisterHandler(handler, a.server.Group(prefix), a.validator)
+	mustValidateAndRegisterHandler(
+		path.Join(a.path, prefix),
+		handler,
+		a.server.Group(prefix),
+		a.validator,
+		a.registry,
+	)
 }
 
 // Group creates a new group of routes
@@ -67,10 +78,18 @@ func (a App) Group(prefix string) Group {
 	return Group{
 		router:    a.server.Group(prefix),
 		validator: a.validator,
+		path:      path.Join(a.path, prefix),
+		registry:  a.registry,
 	}
 }
 
-func mustValidateAndRegisterHandler(handler any, router fiber.Router, validator validator.Validator) {
+func mustValidateAndRegisterHandler(
+	path string,
+	handler any,
+	router fiber.Router,
+	validator validator.Validator,
+	registry map[string]Handler,
+) {
 	handlerType := reflect.TypeOf(handler)
 	if handlerType.Kind() != reflect.Struct {
 		panic("handler is not a struct")
@@ -94,5 +113,7 @@ func mustValidateAndRegisterHandler(handler any, router fiber.Router, validator 
 		}
 
 		handler.Register(router, validator)
+
+		registry[path] = handler
 	}
 }
