@@ -14,7 +14,7 @@ func main() {
 
 	app.MustRegister("/greeting", GreetingHandler{})
 
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":3003"))
 }
 
 type GreetingHandler struct{}

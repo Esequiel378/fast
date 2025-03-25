@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	app, err := fast.New()
+	app, err := fast.New(fast.WithExperimentalOpenAPISchema())
 	if err != nil {
 		log.Fatal(err)
 	}
