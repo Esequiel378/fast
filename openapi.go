@@ -347,8 +347,8 @@ func (g *OpenAPIGenerator) generateSchemaForType(t reflect.Type) SchemaObject {
 				name = field.Name
 			}
 
-			// Check if required
-			isRequired := slices.Contains(parts[1:], "omitempty")
+			// Check if required (field is required if omitempty is NOT present)
+			isRequired := !slices.Contains(parts[1:], "omitempty")
 
 			if isRequired {
 				required = append(required, name)
@@ -366,15 +366,47 @@ func (g *OpenAPIGenerator) generateSchemaForType(t reflect.Type) SchemaObject {
 		return schema
 
 	case reflect.Slice, reflect.Array:
+		// Get the element type
+		elemType := t.Elem()
+
+		// Special case for []string since it's common
+		if elemType.Kind() == reflect.String {
+			return SchemaObject{
+				Type: "array",
+				Items: &SchemaObject{
+					Type: "string",
+				},
+			}
+		}
+
+		// For structs and other complex types
+		if elemType.Kind() == reflect.Struct {
+			// Add the struct type to schemas
+			typeName := elemType.Name()
+			if typeName != "" {
+				if _, exists := g.schemas[typeName]; !exists {
+					g.schemas[typeName] = g.generateSchemaForType(elemType)
+				}
+
+				return SchemaObject{
+					Type: "array",
+					Items: &SchemaObject{
+						Ref: "#/components/schemas/" + typeName,
+					},
+				}
+			}
+		}
+
+		// Default case for other array types
+		elemSchema := g.generateSchemaForType(elemType)
 		return SchemaObject{
 			Type:  "array",
-			Items: &SchemaObject{Ref: g.getTypeRef(t.Elem())},
+			Items: &SchemaObject{Type: elemSchema.Type},
 		}
 
 	case reflect.Map:
 		return SchemaObject{
 			Type: "object",
-			// We could add additional properties here if needed
 		}
 
 	case reflect.String:
@@ -393,29 +425,6 @@ func (g *OpenAPIGenerator) generateSchemaForType(t reflect.Type) SchemaObject {
 	default:
 		return SchemaObject{Type: "object"}
 	}
-}
-
-// getTypeRef returns a reference to a component schema for complex types
-func (g *OpenAPIGenerator) getTypeRef(t reflect.Type) string {
-	// Dereference pointer if needed
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-
-	if t.Kind() == reflect.Struct {
-		name := t.Name()
-		if name != "" {
-			// Add schema to components if not already there
-			if _, exists := g.schemas[name]; !exists {
-				g.schemas[name] = g.generateSchemaForType(t)
-			}
-			return "#/components/schemas/" + name
-		}
-	}
-
-	// For simple types, we don't need a reference
-	schema := g.generateSchemaForType(t)
-	return schema.Type
 }
 
 // generateParametersForType converts a struct type to query parameters
@@ -448,7 +457,7 @@ func (g *OpenAPIGenerator) generateParametersForType(t reflect.Type) []Parameter
 		}
 
 		// Check if required
-		isRequired := slices.Contains(parts[1:], "omitempty")
+		isRequired := !slices.Contains(parts[1:], "omitempty")
 
 		// Generate schema for the field
 		fieldSchema := g.generateSchemaForType(field.Type)

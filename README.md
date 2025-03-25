@@ -11,7 +11,7 @@ func main() {
 
   app.MustRegister("/", GreetingHandler{})
 
-  log.Fatal(app.Listen(":3000"))
+  log.Fatal(app.Listen(":3003"))
 }
 
 type GreetingHandler struct{}
@@ -26,7 +26,7 @@ func (h GreetingHandler) HandleGet() fast.Handler {
 ```
 
 ```shell
-$ curl http://localhost:3000
+$ curl http://localhost:3003
 Hello, World!
 ```
 

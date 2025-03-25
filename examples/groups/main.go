@@ -20,7 +20,7 @@ func main() {
 		MustRegister("/orders", UserHandler{}).
 		MustRegister("/billing", UserHandler{})
 
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen(":3002"))
 }
 
 type User struct {
