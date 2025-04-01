@@ -3,7 +3,6 @@ package fast
 import (
 	"errors"
 	"log"
-	"net/http"
 	"reflect"
 
 	"github.com/esequiel378/fast/internal/validator"
@@ -71,7 +70,8 @@ func (h *endpointHandler[I, O]) Register(r fiber.Router, v validator.Validator) 
 	handlers = append(handlers, func(c *fiber.Ctx) error {
 		var input I
 		parser := c.QueryParser
-		if h.method == http.MethodPost {
+
+		if len(c.BodyRaw()) > 0 {
 			parser = c.BodyParser
 		}
 
