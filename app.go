@@ -109,23 +109,25 @@ var handlerReturnType = reflect.TypeOf((*Handler)(nil)).Elem()
 
 // MustRegister registers a handler to the app
 // The handler must be a struct with Hanlder methods.
-func (a App) MustRegister(prefix string, handler any) {
+func (a App) MustRegister(prefix string, handler any, middlewares ...Middleware) {
 	mustValidateAndRegisterHandler(
 		path.Join(a.path, prefix),
 		handler,
 		a.server.Group(prefix),
 		a.validator,
 		a.apiSchema,
+		middlewares...,
 	)
 }
 
 // Group creates a new group of routes
-func (a App) Group(prefix string) Group {
+func (a App) Group(prefix string, middlewares ...Middleware) Group {
 	return Group{
-		router:    a.server.Group(prefix),
-		validator: a.validator,
-		path:      path.Join(a.path, prefix),
-		apiSchema: a.apiSchema,
+		router:      a.server.Group(prefix),
+		validator:   a.validator,
+		path:        path.Join(a.path, prefix),
+		apiSchema:   a.apiSchema,
+		middlewares: middlewares,
 	}
 }
 
@@ -135,6 +137,7 @@ func mustValidateAndRegisterHandler(
 	router fiber.Router,
 	validator validator.Validator,
 	apiSchema *OpenAPIGenerator,
+	middlewares ...Middleware,
 ) {
 	handlerType := reflect.TypeOf(handler)
 	if handlerType.Kind() != reflect.Struct {
@@ -158,7 +161,7 @@ func mustValidateAndRegisterHandler(
 			panic("methods starting with `Handle` must return fast.Handler")
 		}
 
-		handler.Register(router, validator)
+		handler.Register(router, validator, middlewares...)
 		fmt.Printf("Registered %s %s\n", handler.Method(), path)
 		if apiSchema != nil {
 			apiSchema.RegisterHandler(path, handler)

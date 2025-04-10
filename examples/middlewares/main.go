@@ -15,6 +15,16 @@ func main() {
 
 	app.MustRegister("/greeting", NewGreetingHandler(AuthMiddleware{}))
 
+	app.
+		Group(
+			"/api",
+			func(*fast.Context) error {
+				fmt.Println("API key validation middleware")
+				return nil
+			},
+		).
+		MustRegister("/greeting", NewGreetingHandler(AuthMiddleware{}))
+
 	log.Fatal(app.Listen(":3003"))
 }
 
@@ -67,6 +77,8 @@ func (m AuthMiddleware) HandleValidateAPIKey() fast.Middleware {
 		if apiKey != "fast-is-awesome" {
 			return fast.UnauthorizedError("invalid API key")
 		}
+
+		fmt.Println("API key is valid")
 
 		return nil
 	}

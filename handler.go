@@ -12,7 +12,7 @@ import (
 // Handler is the interface that links the endpoint to the router
 type Handler interface {
 	// Register registers the endpoint to the given router
-	Register(router fiber.Router, validator validator.Validator)
+	Register(router fiber.Router, validator validator.Validator, middlewares ...Middleware)
 	// Path returns the endpoint path
 	Path() string
 	// Method returns the HTTP method
@@ -51,9 +51,10 @@ func (h *endpointHandler[I, O]) Middlewares() []func(*Context) error {
 }
 
 // Register registers the endpoint to the given router
-func (h *endpointHandler[I, O]) Register(r fiber.Router, v validator.Validator) {
-	handlers := make([]fiber.Handler, len(h.middlewares))
-	for idx, middleware := range h.middlewares {
+func (h *endpointHandler[I, O]) Register(r fiber.Router, v validator.Validator, middlewares ...Middleware) {
+	handlers := make([]fiber.Handler, len(h.middlewares)+len(middlewares))
+
+	for idx, middleware := range append(middlewares, h.middlewares...) {
 		handlers[idx] = func(c *fiber.Ctx) error {
 			err := middleware(newContext(c))
 			var httpErr httpError
