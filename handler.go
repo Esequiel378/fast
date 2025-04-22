@@ -61,7 +61,7 @@ func (h *endpointHandler[I, O]) Register(r fiber.Router, v validator.Validator, 
 			if errors.As(err, &httpErr) {
 				return c.Status(httpErr.status).SendString(httpErr.message)
 			}
-			return c.Next()
+			return err
 		}
 	}
 
