@@ -32,3 +32,13 @@ Hello, World!
 
 The `In` and `Out` types are used to define the input and output of the endpoint.
 Fast will perform [validations](https://github.com/go-playground/validator) under the hood and will automatically serialize the output to JSON.
+
+# TODO:
+
+- [ ] Add warning message for route conflicts
+- [ ] Add OpenAPI schema generator
+- [ ] Enhance middleware support with same structure than endpoints
+  - [ ] Add support for middleware with input and output
+  - [ ] Add support for error handling out of the box
+- [ ] Add support for raw endpoint (no input and output, plain context)
+  - In this scenario, the devoloper is responsible for validating the input and output, and handling errors.
