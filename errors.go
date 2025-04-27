@@ -28,3 +28,10 @@ func UnauthorizedError(message string) httpError {
 		message: message,
 	}
 }
+
+func NewHTTPError(status int, message string) httpError {
+	return httpError{
+		status:  status,
+		message: message,
+	}
+}

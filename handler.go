@@ -87,6 +87,11 @@ func (h *endpointHandler[I, O]) Register(r fiber.Router, v validator.Validator, 
 		}
 
 		output, err := h.handler(newContext(c), input)
+		var httpErr httpError
+		if errors.As(err, &httpErr) {
+			return c.Status(httpErr.status).SendString(httpErr.message)
+		}
+
 		if err != nil {
 			log.Printf("error in handler %s %s: %s", h.method, h.path, err)
 			return c.SendStatus(fiber.StatusInternalServerError)
