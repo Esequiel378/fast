@@ -77,7 +77,9 @@ func (h *endpointHandler[I, O]) Register(r fiber.Router, v validator.Validator, 
 		}
 
 		if err := parser(&input); err != nil {
-			return c.SendStatus(fiber.StatusBadRequest)
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+        "error": err.Error(),
+      })
 		}
 
 		if err := v.ValidateStruct(&input); err != nil {
